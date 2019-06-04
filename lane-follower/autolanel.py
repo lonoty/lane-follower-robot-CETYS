@@ -9,9 +9,8 @@ upper1 =  np.array([ 10, 298, 192])
 lower1 =  np.array([-10, 87,  12])
 upper2 =  np.array([185, 271, 202])
 lower2 =  np.array([165, 141,  22])
-src = np.array([[27, 425], [600, 428], [525, 5], [126, 6]], dtype="float32")
-dst = np.array([[100, 480], [540, 480], [540, 0], [100, 0]], dtype="float32")
-
+src = np.array([[15, 226], [303, 221], [262, 2], [64, 5]], dtype="float32")
+dst = np.array([[50, 240], [270, 240], [270, 0], [50, 0]], dtype="float32")
 M = cv2.getPerspectiveTransform(src, dst)
 image_hsv = None
 
@@ -49,16 +48,16 @@ def main():
     image_mask = cv2.inRange(image_hsv,lower1,upper1) + cv2.inRange(image_hsv,lower2,upper2)
 
     ############################ warp tranform ------------> birds eye view
-    warped = cv2.warpPerspective(image_mask, M, (640,480))
-    warped1 = cv2.warpPerspective(image_src, M, (640,480))
-    warped2 = cv2.warpPerspective(image_hsv, M, (640,480))
+    warped = cv2.warpPerspective(image_mask, M, (320,240))
+    warped1 = cv2.warpPerspective(image_src, M, (320,240))
+    warped2 = cv2.warpPerspective(image_hsv, M, (320,240))
     ############ for line detection
 
     edges = cv2.Canny(warped, 30,50)
     #this is the part that will be cut off bottom to top in pixels
-    section= 200
+    section= 100
     roi = edges[section:,:]
-    lines = cv2.HoughLinesP(roi, 1, np.pi/180, 30, minLineLength= 30,maxLineGap=20,)
+    lines = cv2.HoughLinesP(roi, 1, np.pi/180, 15, minLineLength= 15,maxLineGap=10,)
     for x in range(0, len(lines)):
         for x1,y1,x2,y2 in lines[x]:
             cv2.line(warped1,(x1,y1+section),(x2,y2+section),(0,255,0),2)
@@ -86,18 +85,18 @@ def main():
 
     if(action== 0):
         ################## peak histogram (where the lines start in the bottom)
-        histogram = np.sum(warped[350:,:],axis =0)
-        leftp= np.argmax(histogram[:320])
-        rightp= np.argmax(histogram[320:])+320
+        histogram = np.sum(warped[175:,:],axis =0)
+        leftp= np.argmax(histogram[:160])
+        rightp= np.argmax(histogram[160:])+160
         print(leftp,rightp)
 
         ### find bad values (true if there is a missing peak/line) and add a tolerance
         lbad = True if((leftp == 0) or (histogram[leftp] < 2000)) else False
-        rbad = True if((rightp == 320) or (histogram[rightp] < 2000)) else False
+        rbad = True if((rightp == 160) or (histogram[rightp] < 2000)) else False
 
         ################## ERROR from peaks leftbound=165   rightbound=440
-        leftbound = 60
-        rightbound = 575
+        leftbound = 30
+        rightbound = 280
         error=0
         count=0
         print(lbad,rbad)
